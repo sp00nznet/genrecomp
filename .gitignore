@@ -1,0 +1,8 @@
+build/
+.vs/
+.vscode/
+*.user
+*.suo
+CMakeSettings.json
+out/
+.claude/
