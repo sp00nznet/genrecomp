@@ -6,7 +6,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Options
 option(GENRECOMP_BUILD_EXAMPLES "Build example programs" ON)
-option(GENRECOMP_BUILD_DEBUG_RUNNER "Build debug runner with GDB stub" OFF)
 
 # SDL2
 find_package(SDL2 REQUIRED)
@@ -123,14 +122,9 @@ add_library(genrecomp STATIC
     src/m68k.c
     src/bus.c
     src/func_table.c
-    src/vdp.c
-    src/ym2612.c
-    src/psg.c
-    src/z80.c
     src/io.c
     src/platform_sdl.c
     src/input.c
-    src/debug.c
 )
 target_include_directories(genrecomp
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -174,10 +168,3 @@ target_include_directories(genrecomp_ref PRIVATE ${GPGX_DIR} ${GPGX_DIR}/m68k ${
     ${GPGX_DIR}/sound ${GPGX_DIR}/cart_hw ${GPGX_DIR}/cart_hw/svp ${GPGX_DIR}/cd_hw
     ${GPGX_DIR}/input_hw ${GPGX_DIR}/ntsc ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_definitions(genrecomp_ref PRIVATE USE_32BPP_RENDERING LSB_FIRST HAVE_NO_SPRITE_LIMIT)
-
-# --- Debug runner ---
-if(GENRECOMP_BUILD_DEBUG_RUNNER)
-    add_executable(genrecomp_debug_runner tools/debug_runner/main.c)
-    target_link_libraries(genrecomp_debug_runner PRIVATE genrecomp SDL2::SDL2main)
-    target_compile_definitions(genrecomp_debug_runner PRIVATE GENRECOMP_DEBUG=1)
-endif()
