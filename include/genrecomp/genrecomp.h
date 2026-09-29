@@ -27,14 +27,9 @@
 #include "m68k.h"
 #include "bus.h"
 #include "func_table.h"
-#include "vdp.h"
-#include "ym2612.h"
-#include "psg.h"
-#include "z80.h"
 #include "io.h"
 #include "platform.h"
 #include "input.h"
-#include "debug.h"
 
 #include <stdbool.h>
 

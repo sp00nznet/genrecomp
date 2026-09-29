@@ -6,3 +6,17 @@ build/
 CMakeSettings.json
 out/
 .claude/
+
+# Setup output
+setup.log
+Reference Runner.cmd
+reference-runner.sh
+
+# Game data and run output: never committed (house rules section 3).
+# (.md is also a Genesis ROM extension; it can't be ignored here.)
+*.gen
+*.smd
+*.bin
+*.zip
+*.mp4
+ram_*.bin

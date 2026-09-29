@@ -157,23 +157,22 @@ void genrecomp_end_frame(void) {
 
     /* Audio is mixed at the end of each simulated frame in bus.c */
 
-    /* Present video — extract rendered pixels to SDL-friendly format */
-    int vp_x2 = bitmap.viewport.x;
-    int vp_y2 = bitmap.viewport.y;
-    int vp_w2 = bitmap.viewport.w;
-    int vp_h2 = bitmap.viewport.h;
-
-    /* Guard: skip present if viewport is invalid */
-    if (vp_w2 <= 0 || vp_h2 <= 0) {
+    /* Present: copy the viewport into a compact 320x224 buffer */
+    int vp_h = bitmap.viewport.h;
+    if (vp_w <= 0 || vp_h <= 0) {
         platform_frame_sync();
         return;
     }
 
-    uint8_t *fb_start = bitmap.data + (vp_y2 * bitmap.pitch) + (vp_x2 * 4);
+    uint8_t *fb_start = bitmap.data + (bitmap.viewport.y * bitmap.pitch) + (bitmap.viewport.x * 4);
     static uint8_t s_present_buf[GEN_RENDER_WIDTH * GEN_RENDER_HEIGHT * 4];
 
-    int copy_w = (vp_w2 > GEN_RENDER_WIDTH) ? GEN_RENDER_WIDTH : vp_w2;
-    int copy_h = (vp_h2 > GEN_RENDER_HEIGHT) ? GEN_RENDER_HEIGHT : vp_h2;
+    int copy_w = (vp_w > GEN_RENDER_WIDTH) ? GEN_RENDER_WIDTH : vp_w;
+    int copy_h = (vp_h > GEN_RENDER_HEIGHT) ? GEN_RENDER_HEIGHT : vp_h;
+
+    /* H32 is narrower than the buffer: don't leave the last H40 frame's
+     * right-hand columns on screen */
+    if (copy_w < GEN_RENDER_WIDTH) memset(s_present_buf, 0, sizeof(s_present_buf));
 
     for (int y = 0; y < copy_h; y++) {
         memcpy(s_present_buf + y * GEN_RENDER_WIDTH * 4,

@@ -65,30 +65,50 @@ void func_table_dump_stack(FILE *f) {
     fprintf(f, "\n");
 }
 
+static uint32_t s_tail;  /* pending tail call, 0 = none */
+
+void func_table_tail(uint32_t m68k_addr) {
+    s_tail = m68k_addr;
+}
+
 bool func_table_call(uint32_t m68k_addr) {
-    gen_func_t fn = func_table_lookup(m68k_addr);
-    if (fn) {
-        s_call_depth++;
-        if (s_call_depth > s_max_depth) {
-            s_max_depth = s_call_depth;
-            if (s_max_depth <= 50 || (s_max_depth % 100 == 0)) {
-                fprintf(stderr, "[depth] new max call depth: %d (calling $%06X)\n", s_max_depth, m68k_addr);
-            }
+    s_call_depth++;
+    if (s_call_depth > s_max_depth) {
+        s_max_depth = s_call_depth;
+        if (s_max_depth <= 50 || (s_max_depth % 100 == 0)) {
+            fprintf(stderr, "[depth] new max call depth: %d (calling $%06X)\n", s_max_depth, m68k_addr);
         }
-        if (s_call_depth > 500) {
-            fprintf(stderr, "[depth] ABORT: call depth %d at $%06X — likely infinite recursion\n", s_call_depth, m68k_addr);
-            s_call_depth--;
-            return false;
+    }
+    if (s_call_depth > 500) {
+        fprintf(stderr, "[depth] ABORT: call depth %d at $%06X — likely infinite recursion\n", s_call_depth, m68k_addr);
+        s_call_depth--;
+        return false;
+    }
+
+    /* Trampoline: a function that ends in a tail jump (JMP, BRA or
+     * fall-through into another function) records it with
+     * func_table_tail() and returns, and the jump runs here in the same
+     * frame. M68K code loops through such jumps freely; as nested C calls
+     * they would grow the native stack every iteration. */
+    bool found = true;
+    do {
+        s_tail = 0;
+        gen_func_t fn = func_table_lookup(m68k_addr);
+        if (!fn) {
+            if (s_miss_count < 20 && m68k_addr != s_last_miss) {
+                fprintf(stderr, "func_table: no function at $%06X (SP=$%08X), ", m68k_addr, g_m68k.a[7]);
+                func_table_dump_stack(stderr);  /* the caller is the last entry */
+                s_miss_count++;
+                s_last_miss = m68k_addr;
+            }
+            found = false;
+            break;
         }
         s_stack[s_call_depth - 1] = m68k_addr;
         fn();
-        s_call_depth--;
-        return true;
-    }
-    if (s_miss_count < 20 && m68k_addr != s_last_miss) {
-        fprintf(stderr, "func_table: no function at $%06X (SP=$%08X)\n", m68k_addr, g_m68k.a[7]);
-        s_miss_count++;
-        s_last_miss = m68k_addr;
-    }
-    return false;
+        m68k_addr = s_tail;
+    } while (m68k_addr);
+
+    s_call_depth--;
+    return found;
 }
