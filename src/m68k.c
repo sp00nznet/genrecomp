@@ -9,6 +9,7 @@
 
 #include "genrecomp/m68k.h"
 #include "genrecomp/bus.h"
+#include "genrecomp/func_table.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -36,10 +37,11 @@ void recomp_m68k_exception(uint8_t vector) {
      * 1. Switch to supervisor mode
      * 2. Push PC and SR on supervisor stack
      * 3. Load new PC from vector table
+     * 4. Dispatch to handler via func_table_call
      *
-     * In recompiled code, most exceptions won't fire (no illegal
-     * instructions, no bus errors). This is mainly for VBlank/HBlank
-     * interrupt handling and TRAP instructions.
+     * For TRAP instructions (vectors 32-47), the handler is called
+     * directly. The handler saves/restores registers and ends with RTE,
+     * which pops the saved PC and SR from the stack.
      */
     uint16_t old_sr = m68k_get_sr();
 
@@ -57,8 +59,24 @@ void recomp_m68k_exception(uint8_t vector) {
     bus_write16(g_m68k.a[7], old_sr);
 
     /* Load new PC from vector table */
-    g_m68k.pc = bus_read32((uint32_t)vector * 4);
+    uint32_t handler_addr = bus_read32((uint32_t)vector * 4);
+    g_m68k.pc = handler_addr;
 
     /* Update SSP */
+    g_m68k.ssp = g_m68k.a[7];
+
+    /* Dispatch to the handler function.
+     * The recompiled handler ends with "return; // RTE" which just returns
+     * here. The original RTE would pop SR and PC from the supervisor stack,
+     * but since we called via C function call, we need to clean up the
+     * exception frame we pushed above. */
+    func_table_call(handler_addr);
+
+    /* Pop the exception frame: SR (word) then PC (long) */
+    uint16_t restored_sr = bus_read16(g_m68k.a[7]);
+    g_m68k.a[7] += 2;
+    g_m68k.pc = bus_read32(g_m68k.a[7]);
+    g_m68k.a[7] += 4;
+    m68k_set_sr(restored_sr);
     g_m68k.ssp = g_m68k.a[7];
 }
