@@ -49,6 +49,10 @@ void     bus_ram_write32(uint16_t offset, uint32_t val);
 /* Get pointer to M68K RAM (64KB) for bulk access */
 uint8_t *bus_get_ram(void);
 
+/* Write RAM + VDP state snapshot (see bus.c for layout) */
+#include <stdio.h>
+void bus_dump_state(FILE *f);
+
 /* Get pointer to ROM data */
 const uint8_t *bus_get_rom(uint32_t *size_out);
 

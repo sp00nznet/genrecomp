@@ -20,4 +20,9 @@ void        func_table_register(uint32_t m68k_addr, gen_func_t func);
 gen_func_t  func_table_lookup(uint32_t m68k_addr);
 bool        func_table_call(uint32_t m68k_addr);
 
+/* Print the shadow call stack (outermost first). Called from a VBlank
+ * callback it shows where the game's main thread is blocked. */
+#include <stdio.h>
+void        func_table_dump_stack(FILE *f);
+
 #endif /* GENRECOMP_FUNC_TABLE_H */

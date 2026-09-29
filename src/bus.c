@@ -128,6 +128,16 @@ void bus_ram_write32(uint16_t offset, uint32_t val) {
     bus_ram_write16(offset + 2, (uint16_t)(val & 0xFFFF));
 }
 
+void bus_dump_state(FILE *f) {
+    /* Layout: work RAM 64K | VDP regs 32 | CRAM 128 | VSRAM 128 | VRAM 64K.
+     * RAM is in GPGX's native (LSB_FIRST byte-swapped) order. */
+    fwrite(work_ram, 1, 0x10000, f);
+    fwrite(reg, 1, 0x20, f);
+    fwrite(cram, 1, 0x80, f);
+    fwrite(vsram, 1, 0x80, f);
+    fwrite(vram, 1, 0x10000, f);
+}
+
 uint8_t *bus_get_ram(void) {
     return work_ram;
 }

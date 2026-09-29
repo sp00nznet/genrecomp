@@ -4,6 +4,7 @@
 
 #include "genrecomp/input.h"
 #include "genrecomp/io.h"
+#include "genrecomp/platform.h"
 
 #include <SDL.h>
 #include <string.h>
@@ -11,7 +12,8 @@
 static uint16_t s_pad_state[2];
 
 void recomp_input_update(void) {
-    const uint8_t *keys = SDL_GetKeyboardState(NULL);
+    static const uint8_t no_keys[SDL_NUM_SCANCODES];
+    const uint8_t *keys = platform_is_headless() ? no_keys : SDL_GetKeyboardState(NULL);
     uint16_t buttons = 0;
 
     /* Default keyboard mapping (Player 1) */
@@ -27,6 +29,7 @@ void recomp_input_update(void) {
     if (keys[SDL_SCANCODE_S])      buttons |= GEN_BTN_Y;
     if (keys[SDL_SCANCODE_D])      buttons |= GEN_BTN_Z;
 
+    buttons |= platform_scripted_buttons();
     s_pad_state[0] = buttons;
     s_pad_state[1] = 0;
 

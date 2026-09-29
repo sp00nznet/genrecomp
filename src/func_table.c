@@ -4,6 +4,7 @@
  */
 
 #include "genrecomp/func_table.h"
+#include "genrecomp/m68k.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -52,12 +53,42 @@ gen_func_t func_table_lookup(uint32_t m68k_addr) {
     return NULL;
 }
 
+static int s_miss_count = 0;
+static uint32_t s_last_miss = 0;
+static int s_call_depth = 0;
+static int s_max_depth = 0;
+static uint32_t s_stack[512];  /* shadow call stack of M68K addresses */
+
+void func_table_dump_stack(FILE *f) {
+    fprintf(f, "call stack (%d):", s_call_depth);
+    for (int i = 0; i < s_call_depth && i < 512; i++) fprintf(f, " $%06X", s_stack[i]);
+    fprintf(f, "\n");
+}
+
 bool func_table_call(uint32_t m68k_addr) {
     gen_func_t fn = func_table_lookup(m68k_addr);
     if (fn) {
+        s_call_depth++;
+        if (s_call_depth > s_max_depth) {
+            s_max_depth = s_call_depth;
+            if (s_max_depth <= 50 || (s_max_depth % 100 == 0)) {
+                fprintf(stderr, "[depth] new max call depth: %d (calling $%06X)\n", s_max_depth, m68k_addr);
+            }
+        }
+        if (s_call_depth > 500) {
+            fprintf(stderr, "[depth] ABORT: call depth %d at $%06X — likely infinite recursion\n", s_call_depth, m68k_addr);
+            s_call_depth--;
+            return false;
+        }
+        s_stack[s_call_depth - 1] = m68k_addr;
         fn();
+        s_call_depth--;
         return true;
     }
-    fprintf(stderr, "func_table: no function at $%06X\n", m68k_addr);
+    if (s_miss_count < 20 && m68k_addr != s_last_miss) {
+        fprintf(stderr, "func_table: no function at $%06X (SP=$%08X)\n", m68k_addr, g_m68k.a[7]);
+        s_miss_count++;
+        s_last_miss = m68k_addr;
+    }
     return false;
 }
