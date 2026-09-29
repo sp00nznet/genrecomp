@@ -21,6 +21,17 @@ jobs:
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure
 
+  recompiler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install capstone
+      - name: Analyzer self-check
+        run: python tools/recompiler/test_analyze.py
+
   linux:
     runs-on: ubuntu-latest
     steps:

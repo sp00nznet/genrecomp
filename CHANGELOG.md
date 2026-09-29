@@ -22,6 +22,13 @@ versions follow [SemVer](https://semver.org/).
   RTS follows the 68K stack, including into pushed continuations. (#6)
 - `recomp_m68k_interrupt` / `genrecomp_vblank_irq`: interrupts with the
   full context restored, SR masking and VDP IE0. (#6)
+- `tools/recompiler/`: the shared 68K recompiler (from Pigskin's generator)
+  with per-title `recomp.json`, compiled-switch recognition, overlap
+  resolution, PC-relative call following, and CMPM/MOVEP/CHK/BCD
+  translation; `docs/recompiler.md`. (#7)
+- `M68K_ABCD`, `M68K_SBCD`, `M68K_NBCD`. (#7)
+- `GENRECOMP_WATCH=<addr>`: log every write to an address with the call
+  stack. (#7)
 
 ### Fixed
 - 8/16-bit ALU macros cleared the upper bits of the destination register. (#1)

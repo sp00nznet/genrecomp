@@ -4,6 +4,7 @@
  *   1. .b/.w ALU macros must leave the untouched upper bits of a register.
  *   2. func_table_tail() must run chains of tail jumps without nesting.
  *   3. RTS goes where the 68K stack says, even into a pushed continuation.
+ *   4. Packed BCD arithmetic.
  */
 
 #include <genrecomp/m68k.h>
@@ -47,6 +48,23 @@ int main(void) {
     CHECK(g_m68k.d[0] == 0x1234687F);
     M68K_EXT16(g_m68k.d[0]);
     CHECK(g_m68k.d[0] == 0x1234007F);
+
+    /* BCD: 45+38=83, 99+1=00 carry, 23-19=04, 00-01=99 borrow, NBCD 01 = 99 */
+    g_m68k.flag_X = false; g_m68k.d[2] = 0xAAAA0045;
+    M68K_ABCD(g_m68k.d[2], 0x38);
+    CHECK(g_m68k.d[2] == 0xAAAA0083 && !g_m68k.flag_C);
+    g_m68k.flag_X = false; g_m68k.d[2] = 0x99;
+    M68K_ABCD(g_m68k.d[2], 0x01);
+    CHECK(g_m68k.d[2] == 0x00 && g_m68k.flag_C && g_m68k.flag_X);
+    g_m68k.flag_X = false; g_m68k.d[2] = 0x23;
+    M68K_SBCD(g_m68k.d[2], 0x19);
+    CHECK(g_m68k.d[2] == 0x04 && !g_m68k.flag_C);
+    g_m68k.flag_X = false; g_m68k.d[2] = 0x00;
+    M68K_SBCD(g_m68k.d[2], 0x01);
+    CHECK(g_m68k.d[2] == 0x99 && g_m68k.flag_C);
+    g_m68k.flag_X = false; g_m68k.flag_Z = true; g_m68k.d[2] = 0x01;
+    M68K_NBCD(g_m68k.d[2]);
+    CHECK(g_m68k.d[2] == 0x99 && g_m68k.flag_C && !g_m68k.flag_Z);
 
     /* memory operands are sized temporaries: the merge must be a no-op */
     uint16_t tmp = 0x00FF;
