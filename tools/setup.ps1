@@ -93,7 +93,7 @@ Say "    ext\Genesis-Plus-GX ready"
 # 3. Configure and build ---------------------------------------------------
 Say "3/5 Building (first build takes a minute or two)"
 if (-not (Test-Path "$Build\CMakeCache.txt")) {
-    Run "Configuring" "cmake" "-S `"$Root`" -B `"$Build`" -G `"Visual Studio 17 2022`" -A x64 -DCMAKE_TOOLCHAIN_FILE=`"$Vcpkg\scripts\buildsystems\vcpkg.cmake`""
+    Run "Configuring" "cmake" "-S `"$Root`" -B `"$Build`" -A x64 -DCMAKE_TOOLCHAIN_FILE=`"$Vcpkg\scripts\buildsystems\vcpkg.cmake`""
 }
 Run "Building" "cmake" "--build `"$Build`" --config Release"
 Say "    built build\Release\genrecomp_ref.exe"
