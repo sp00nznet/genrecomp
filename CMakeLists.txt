@@ -107,6 +107,11 @@ target_compile_definitions(genplusgx_hw PRIVATE
     HAVE_NO_SPRITE_LIMIT
 )
 
+# GPGX uses libm (sin, pow, ...); MSVC's CRT has it built in
+if(NOT WIN32)
+    target_link_libraries(genplusgx_hw PUBLIC m)
+endif()
+
 # Suppress warnings in third-party code and fix MSVC compatibility
 if(MSVC)
     target_compile_options(genplusgx_hw PRIVATE /W0)
