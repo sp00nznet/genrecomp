@@ -80,3 +80,25 @@ void recomp_m68k_exception(uint8_t vector) {
     m68k_set_sr(restored_sr);
     g_m68k.ssp = g_m68k.a[7];
 }
+
+uint8_t g_m68k_irq_pending;  /* highest requested level not yet taken */
+
+void recomp_m68k_interrupt(uint8_t level) {
+    /* Masked (SR I2-I0 >= level, level 7 excepted): remember it; the bus
+     * clock takes it as soon as the mask drops, like the hardware does. */
+    if (level <= g_m68k.int_mask && level != 7) {
+        if (level > g_m68k_irq_pending) g_m68k_irq_pending = level;
+        return;
+    }
+    if (g_m68k_irq_pending <= level) g_m68k_irq_pending = 0;
+
+    /* The hardware stacks PC and SR and RTE restores them; the handler
+     * saves any registers it uses. Recompiled code is interrupted in the
+     * middle of a bus access, possibly between setting flags and branching
+     * on them, so everything is restored here, not only what RTE would. */
+    M68kContext saved = g_m68k;
+    g_m68k.flag_S = true;
+    g_m68k.int_mask = level;
+    func_table_call(bus_read32((uint32_t)(24 + level) * 4));
+    g_m68k = saved;
+}

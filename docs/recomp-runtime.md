@@ -78,6 +78,41 @@ calls directly rather than through `func_table_call` (its entry point, its
 VBlank handler) must go through the dispatcher too, or a pending tail jump is
 never taken.
 
+## Calls and returns follow the 68K stack (`func_table_jsr`, `func_table_rts`)
+
+JSR and BSR push the real return address on the 68K stack, and RTS pops it,
+exactly as the hardware does. Two kinds of code depend on this:
+
+- **Compiled C.** A C function reads its arguments at `8(a6)` after
+  `link a6`, above the return address. With no address pushed, every
+  argument is off by four bytes (General Chaos).
+- **Code that returns somewhere it chose.** Compiled runtimes push a
+  continuation and branch (`pea cont(pc); bra div; ... rts`), and assembly
+  pushes a return address and jumps through a register. `func_table_jsr`
+  records the address it pushed; `func_table_rts` compares what it pops. If
+  they differ it continues at the popped address, as a tail jump in the same
+  C frame, rather than returning to the C caller. If the popped address
+  isn't an entry point (a task switcher returning into another task's
+  saved PC, as Pigskin does) it falls back to a plain return and logs it:
+
+  ```
+  func_table: RTS to $0EF4AC (expected $0EB414, SP=$00FFFCF4) has no function; returning, call stack (4): ...
+  ```
+
+  An RTS to `$000000` means the return address was overwritten: find the
+  writer with `GENRECOMP_WATCH=<address>` (see the recompiler doc).
+
+## Interrupts (`recomp_m68k_interrupt`, `genrecomp_vblank_irq`)
+
+The VBlank callback runs inside some bus access of the main thread, which may
+sit between setting flags and branching on them. `recomp_m68k_interrupt`
+saves the whole CPU context and restores it afterwards, which is what the
+hardware's exception frame plus the handler's own saves amount to. It also
+honours the SR mask: a masked level is held pending, and the bus clock takes
+it as soon as the mask drops. `genrecomp_vblank_irq()` raises level 6 only if
+VDP register 1's IE0 bit is set. Titles call it from their VBlank callback
+instead of calling the handler directly.
+
 ## Tooling
 
 All take the same flags (`platform_parse_args`, `include/genrecomp/platform.h`):

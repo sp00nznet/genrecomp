@@ -5,6 +5,7 @@
 
 #include "genrecomp/func_table.h"
 #include "genrecomp/m68k.h"
+#include "genrecomp/bus.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -71,8 +72,47 @@ void func_table_tail(uint32_t m68k_addr) {
     s_tail = m68k_addr;
 }
 
+/* Return address each frame's JSR pushed (0: entered some other way) */
+static uint32_t s_expect[512];
+
+bool func_table_jsr(uint32_t m68k_addr, uint32_t ret) {
+    g_m68k.a[7] -= 4;
+    bus_write32(g_m68k.a[7], ret);
+    return func_table_call_expecting(m68k_addr, ret);
+}
+
+void func_table_rts(void) {
+    /* RTS pops the real return address. If it isn't the one this frame's
+     * JSR pushed, the code arranged its own continuation (PEA + BRA,
+     * push + JMP, a rewritten return address): go there, in this frame,
+     * rather than back to the C caller. */
+    uint32_t r = bus_read32(g_m68k.a[7]) & 0xFFFFFF;
+    g_m68k.a[7] += 4;
+    int d = s_call_depth - 1;
+    uint32_t e = (d >= 0 && d < 512) ? s_expect[d] : 0;
+    if (e && r != e) {
+        if (func_table_lookup(r)) s_tail = r;
+        else {
+            /* Mid-function return points (a task switcher returning into
+             * another task's saved PC) aren't entry points: fall back to a
+             * plain return, which is what the C call structure implies. */
+            static int s_warned;
+            if (s_warned++ < 10) {
+                fprintf(stderr, "func_table: RTS to $%06X (expected $%06X, SP=$%08X) has no function; returning, ",
+                        r, e, g_m68k.a[7] - 4);
+                func_table_dump_stack(stderr);
+            }
+        }
+    }
+}
+
 bool func_table_call(uint32_t m68k_addr) {
+    return func_table_call_expecting(m68k_addr, 0);
+}
+
+bool func_table_call_expecting(uint32_t m68k_addr, uint32_t ret) {
     s_call_depth++;
+    if (s_call_depth <= 512) s_expect[s_call_depth - 1] = ret;
     if (s_call_depth > s_max_depth) {
         s_max_depth = s_call_depth;
         if (s_max_depth <= 50 || (s_max_depth % 100 == 0)) {

@@ -76,6 +76,10 @@ static void bus_tick_cycles(void) {
     if (s_in_tick) return;
     s_in_tick = true;
 
+    /* An interrupt held back by the SR mask is taken once the mask drops */
+    if (g_m68k_irq_pending > g_m68k.int_mask)
+        recomp_m68k_interrupt(g_m68k_irq_pending);
+
     /* Advance the scanline clock whenever a full line of cycles has
      * accumulated, mirroring system_frame_gen(): the Z80 runs to the end
      * of each line (so its sound driver consumes the 68K's commands and

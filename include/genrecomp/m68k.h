@@ -926,4 +926,13 @@ void recomp_m68k_reset(void);
 /* Handle exceptions (interrupts, traps, etc.) */
 void recomp_m68k_exception(uint8_t vector);
 
+/* Run an interrupt handler (e.g. the level-6 VBlank vector) from inside
+ * the main thread's execution, the way the hardware does: the interrupted
+ * code's entire context, SR and flags included, is restored afterwards.
+ * Call this from a VBlank callback rather than func_table_call. If SR
+ * masks the level it is held pending and taken by the bus clock once the
+ * mask drops. */
+void recomp_m68k_interrupt(uint8_t level);
+extern uint8_t g_m68k_irq_pending;
+
 #endif /* GENRECOMP_M68K_H */

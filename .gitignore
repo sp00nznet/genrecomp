@@ -20,3 +20,6 @@ reference-runner.sh
 *.zip
 *.mp4
 ram_*.bin
+
+# Python
+__pycache__/
