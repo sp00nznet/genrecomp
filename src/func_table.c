@@ -96,7 +96,8 @@ bool func_table_call(uint32_t m68k_addr) {
         gen_func_t fn = func_table_lookup(m68k_addr);
         if (!fn) {
             if (s_miss_count < 20 && m68k_addr != s_last_miss) {
-                fprintf(stderr, "func_table: no function at $%06X (SP=$%08X)\n", m68k_addr, g_m68k.a[7]);
+                fprintf(stderr, "func_table: no function at $%06X (SP=$%08X), ", m68k_addr, g_m68k.a[7]);
+                func_table_dump_stack(stderr);  /* the caller is the last entry */
                 s_miss_count++;
                 s_last_miss = m68k_addr;
             }
