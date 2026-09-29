@@ -1,15 +1,25 @@
 /*
- * Runtime self-check: recompiled-code semantics that broke a real title
- * silently (see docs/recomp-runtime.md).
- *   .b/.w ALU macros must leave the untouched upper bits of a register.
+ * Runtime self-check: the two recompiled-code semantics that broke real
+ * titles silently (see docs/recomp-runtime.md).
+ *   1. .b/.w ALU macros must leave the untouched upper bits of a register.
+ *   2. func_table_tail() must run chains of tail jumps without nesting.
  */
 
 #include <genrecomp/m68k.h>
+#include <genrecomp/func_table.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 /* always on: Release builds define NDEBUG */
 #define CHECK(c) do { if (!(c)) { printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #c); exit(1); } } while (0)
+
+static int s_hops;
+
+static void hop(void) {
+    /* M68K: BRA to itself 10000 times. Nested C calls would hit the
+     * dispatcher's depth-500 abort long before the count is reached. */
+    if (++s_hops < 10000) func_table_tail(0x1000);
+}
 
 int main(void) {
     /* ror.w #8 then swap: the upper word must survive the .w rotate */
@@ -33,6 +43,11 @@ int main(void) {
     uint16_t tmp = 0x00FF;
     M68K_ADD16(tmp, 1);
     CHECK(tmp == 0x0100);
+
+    func_table_init();
+    func_table_register(0x1000, hop);
+    CHECK(func_table_call(0x1000));
+    CHECK(s_hops == 10000);
 
     printf("test_runtime: ok\n");
     return 0;

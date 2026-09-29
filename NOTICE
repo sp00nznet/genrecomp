@@ -1,0 +1,27 @@
+genrecomp — third-party attribution
+===================================
+
+genrecomp's own code is MIT licensed (see LICENSE). It builds against the
+component below, which is not MIT, and every binary that links genrecomp
+includes it. It is other people's work and is credited as such.
+
+
+Genesis Plus GX — non-commercial licence
+----------------------------------------
+
+  https://github.com/ekeeke/Genesis-Plus-GX
+  Git submodule at ext/Genesis-Plus-GX (not copied into this repository).
+
+  Copyright (c) 1998-2003 Charles MacDonald
+  Copyright (c) 2007-2026 Eke-Eke
+  Some portions copyright Nicola Salmoria and the MAME team
+
+  Redistributions "may not be sold, nor may they be used in a commercial
+  product or activity". That applies to any binary built with genrecomp:
+  recompiled titles built on it can be shared, not sold.
+
+  Components inside Genesis Plus GX that genrecomp compiles carry their own
+  licences, reproduced in the same file. In particular the Nuked OPN2 YM2612
+  core (core/sound/ym3438.c) is LGPL-2.1-or-later.
+
+  Full text, verbatim from the submodule: LICENSES/Genesis-Plus-GX.txt

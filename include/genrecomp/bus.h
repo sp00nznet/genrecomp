@@ -56,4 +56,11 @@ void bus_dump_state(FILE *f);
 /* Get pointer to ROM data */
 const uint8_t *bus_get_rom(uint32_t *size_out);
 
+/* VBlank callback — called automatically when bus cycle simulation
+ * crosses the VBlank boundary (scanline reaches active display height).
+ * This allows VBlank-driven code (counters, interrupt handlers) to
+ * execute during tight polling loops in recompiled code. */
+typedef void (*bus_vblank_callback_t)(void);
+void bus_set_vblank_callback(bus_vblank_callback_t cb);
+
 #endif /* GENRECOMP_BUS_H */
