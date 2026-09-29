@@ -66,6 +66,18 @@ instead of RAM and the screen went black after the SEGA logo. The macros now
 merge: `(dst) = ((dst) & ~0xFFFFu) | (uint16_t)result`, which is also correct
 for the sized temporaries generated for memory operands.
 
+## Tail jumps (`src/func_table.c`, `func_table_tail`)
+
+68K code jumps between routines with `JMP`/`BRA` and loops through such chains
+indefinitely. Emitted as `func_table_call(x); return;` each jump nests a C call,
+and a loop through two routines grows the native stack every iteration until the
+depth guard aborts (depth 501 after ~10 seconds of Pigskin gameplay). Generated
+code should emit `{ func_table_tail(x); return; }`: the dispatcher runs the
+target after the current function returns, in the same C frame. Anything a game
+calls directly rather than through `func_table_call` (its entry point, its
+VBlank handler) must go through the dispatcher too, or a pending tail jump is
+never taken.
+
 ## Tooling
 
 All take the same flags (`platform_parse_args`, `include/genrecomp/platform.h`):
@@ -92,5 +104,5 @@ model is approximate), so align by content, not by frame number.
 `func_table_dump_stack()` prints the shadow call stack; called from the VBlank
 callback it shows where the game's main thread is blocked.
 
-`tests/test_runtime.c` checks the macro-width behaviour
+`tests/test_runtime.c` checks the macro-width and tail-jump behaviour
 (`ctest -C Release` from the build directory).
