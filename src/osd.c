@@ -11,7 +11,6 @@
 #include "shared.h"
 
 /* genrecomp input header (for feeding input into GenPlusGX) */
-#include "genrecomp/input.h"
 
 /* Global configuration */
 t_config config;
@@ -123,23 +122,11 @@ int load_archive(char *filename, unsigned char *buffer, int maxsize, char *exten
 }
 
 /*
- * osd_input_update — called by GenPlusGX during system_frame_gen()
- * to poll input. We feed our genrecomp input state into GenPlusGX's
- * input system.
+ * osd_input_update: GPGX's per-frame input poll. Nothing to do:
+ * recomp_input_update() already wrote input.pad[] through
+ * io_set_pad_state(). (Calling back into genrecomp from here would also make
+ * the GPGX library depend on genrecomp, a cycle GNU ld won't resolve.)
  */
 void osd_input_update(void)
 {
-    /* Read genrecomp pad state and translate to GenPlusGX INPUT_* bitmasks */
-    uint16_t pad0 = recomp_input_read_pad(0);
-    uint16_t pad1 = recomp_input_read_pad(1);
-
-    /* GenPlusGX input bitmasks (from input_hw/input.h):
-     * INPUT_UP=0x0001 INPUT_DOWN=0x0002 INPUT_LEFT=0x0004 INPUT_RIGHT=0x0008
-     * INPUT_B=0x0010  INPUT_C=0x0020    INPUT_A=0x0040    INPUT_START=0x0080
-     * INPUT_Z=0x0100  INPUT_Y=0x0200    INPUT_X=0x0400    INPUT_MODE=0x0800
-     *
-     * Our GEN_BTN_ values happen to match exactly (by design).
-     */
-    input.pad[0] = pad0;
-    input.pad[1] = pad1;
 }
