@@ -161,6 +161,12 @@ if(GENRECOMP_BUILD_EXAMPLES)
     target_link_libraries(genrecomp_minimal PRIVATE genrecomp SDL2::SDL2main)
 endif()
 
+# --- Runtime self-check (ctest) ---
+enable_testing()
+add_executable(genrecomp_test_runtime tests/test_runtime.c)
+target_link_libraries(genrecomp_test_runtime PRIVATE genrecomp)
+add_test(NAME runtime COMMAND genrecomp_test_runtime)
+
 # --- Debug runner ---
 if(GENRECOMP_BUILD_DEBUG_RUNNER)
     add_executable(genrecomp_debug_runner tools/debug_runner/main.c)

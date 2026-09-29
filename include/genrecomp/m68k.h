@@ -118,7 +118,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_C = g_m68k.flag_X = (_r > 0xFF); \
     g_m68k.flag_V = ((_d ^ _res) & (_s ^ _res) & 0x80) != 0; \
     m68k_update_nz8(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_ADD16(dst, src) do { \
@@ -129,7 +129,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_C = g_m68k.flag_X = (_r > 0xFFFF); \
     g_m68k.flag_V = ((_d ^ _res) & (_s ^ _res) & 0x8000) != 0; \
     m68k_update_nz16(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_ADD32(dst, src) do { \
@@ -153,7 +153,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_V = ((_d ^ _res) & (_s ^ _res) & 0x80) != 0; \
     g_m68k.flag_N = (_res & 0x80) != 0; \
     if (_res != 0) g_m68k.flag_Z = false; \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_ADDX16(dst, src) do { \
@@ -165,7 +165,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_V = ((_d ^ _res) & (_s ^ _res) & 0x8000) != 0; \
     g_m68k.flag_N = (_res & 0x8000) != 0; \
     if (_res != 0) g_m68k.flag_Z = false; \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_ADDX32(dst, src) do { \
@@ -189,7 +189,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_C = g_m68k.flag_X = (_d < _s); \
     g_m68k.flag_V = ((_d ^ _s) & (_d ^ _res) & 0x80) != 0; \
     m68k_update_nz8(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_SUB16(dst, src) do { \
@@ -200,7 +200,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_C = g_m68k.flag_X = (_d < _s); \
     g_m68k.flag_V = ((_d ^ _s) & (_d ^ _res) & 0x8000) != 0; \
     m68k_update_nz16(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_SUB32(dst, src) do { \
@@ -225,7 +225,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_V = ((_d ^ _s) & (_d ^ _res) & 0x80) != 0; \
     g_m68k.flag_N = (_res & 0x80) != 0; \
     if (_res != 0) g_m68k.flag_Z = false; \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_SUBX16(dst, src) do { \
@@ -238,7 +238,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_V = ((_d ^ _s) & (_d ^ _res) & 0x8000) != 0; \
     g_m68k.flag_N = (_res & 0x8000) != 0; \
     if (_res != 0) g_m68k.flag_Z = false; \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_SUBX32(dst, src) do { \
@@ -289,7 +289,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_C = g_m68k.flag_X = (_d != 0); \
     g_m68k.flag_V = (_d == 0x80); \
     m68k_update_nz8(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_NEG16(dst) do { \
@@ -298,7 +298,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_C = g_m68k.flag_X = (_d != 0); \
     g_m68k.flag_V = (_d == 0x8000); \
     m68k_update_nz16(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_NEG32(dst) do { \
@@ -319,7 +319,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_V = (_res & 0x80) && (_d & 0x80); \
     g_m68k.flag_N = (_res & 0x80) != 0; \
     if (_res != 0) g_m68k.flag_Z = false; \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_NEGX16(dst) do { \
@@ -330,7 +330,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     g_m68k.flag_V = (_res & 0x8000) && (_d & 0x8000); \
     g_m68k.flag_N = (_res & 0x8000) != 0; \
     if (_res != 0) g_m68k.flag_Z = false; \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_NEGX32(dst) do { \
@@ -440,14 +440,14 @@ static inline void m68k_update_nz32(uint32_t val) {
     uint8_t _res = (uint8_t)(dst) & (uint8_t)(src); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz8(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_AND16(dst, src) do { \
     uint16_t _res = (uint16_t)(dst) & (uint16_t)(src); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz16(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_AND32(dst, src) do { \
@@ -461,14 +461,14 @@ static inline void m68k_update_nz32(uint32_t val) {
     uint8_t _res = (uint8_t)(dst) | (uint8_t)(src); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz8(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_OR16(dst, src) do { \
     uint16_t _res = (uint16_t)(dst) | (uint16_t)(src); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz16(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_OR32(dst, src) do { \
@@ -482,14 +482,14 @@ static inline void m68k_update_nz32(uint32_t val) {
     uint8_t _res = (uint8_t)(dst) ^ (uint8_t)(src); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz8(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_EOR16(dst, src) do { \
     uint16_t _res = (uint16_t)(dst) ^ (uint16_t)(src); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz16(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_EOR32(dst, src) do { \
@@ -503,14 +503,14 @@ static inline void m68k_update_nz32(uint32_t val) {
     uint8_t _res = ~(uint8_t)(dst); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz8(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_res); \
 } while(0)
 
 #define M68K_NOT16(dst) do { \
     uint16_t _res = ~(uint16_t)(dst); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz16(_res); \
-    (dst) = _res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_res); \
 } while(0)
 
 #define M68K_NOT32(dst) do { \
@@ -585,7 +585,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz8(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_d); \
 } while(0)
 
 #define M68K_LSL16(dst, count) do { \
@@ -602,7 +602,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz16(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_d); \
 } while(0)
 
 #define M68K_LSL32(dst, count) do { \
@@ -637,7 +637,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz8(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_d); \
 } while(0)
 
 #define M68K_LSR16(dst, count) do { \
@@ -654,7 +654,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz16(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_d); \
 } while(0)
 
 #define M68K_LSR32(dst, count) do { \
@@ -687,7 +687,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz8((uint8_t)_d); \
-    (dst) = (uint8_t)_d; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)((uint8_t)_d); \
 } while(0)
 
 #define M68K_ASR16(dst, count) do { \
@@ -702,7 +702,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz16((uint16_t)_d); \
-    (dst) = (uint16_t)_d; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)((uint16_t)_d); \
 } while(0)
 
 #define M68K_ASR32(dst, count) do { \
@@ -732,7 +732,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz8(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_d); \
 } while(0)
 
 #define M68K_ROL16(dst, count) do { \
@@ -746,7 +746,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz16(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_d); \
 } while(0)
 
 #define M68K_ROL32(dst, count) do { \
@@ -775,7 +775,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz8(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_d); \
 } while(0)
 
 #define M68K_ROR16(dst, count) do { \
@@ -789,7 +789,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
     g_m68k.flag_V = false; \
     m68k_update_nz16(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_d); \
 } while(0)
 
 #define M68K_ROR32(dst, count) do { \
@@ -818,7 +818,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     if (!((count) & 63)) g_m68k.flag_C = g_m68k.flag_X; \
     g_m68k.flag_V = false; \
     m68k_update_nz8(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_d); \
 } while(0)
 
 #define M68K_ROXL16(dst, count) do { \
@@ -832,7 +832,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     if (!((count) & 63)) g_m68k.flag_C = g_m68k.flag_X; \
     g_m68k.flag_V = false; \
     m68k_update_nz16(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_d); \
 } while(0)
 
 #define M68K_ROXL32(dst, count) do { \
@@ -861,7 +861,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     if (!((count) & 63)) g_m68k.flag_C = g_m68k.flag_X; \
     g_m68k.flag_V = false; \
     m68k_update_nz8(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_d); \
 } while(0)
 
 #define M68K_ROXR16(dst, count) do { \
@@ -875,7 +875,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     if (!((count) & 63)) g_m68k.flag_C = g_m68k.flag_X; \
     g_m68k.flag_V = false; \
     m68k_update_nz16(_d); \
-    (dst) = _d; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)(_d); \
 } while(0)
 
 #define M68K_ROXR32(dst, count) do { \
@@ -906,7 +906,7 @@ static inline void m68k_update_nz32(uint32_t val) {
     int16_t _res = (int8_t)(uint8_t)(dst); \
     g_m68k.flag_C = false; g_m68k.flag_V = false; \
     m68k_update_nz16((uint16_t)_res); \
-    (dst) = (uint16_t)_res; \
+    (dst) = ((dst) & ~0xFFFFu) | (uint16_t)((uint16_t)_res); \
 } while(0)
 
 #define M68K_EXT32(dst) do { \
