@@ -25,6 +25,19 @@ bool        func_table_call(uint32_t m68k_addr);
  * C stack. Generated code: { func_table_tail(0x1234); return; } */
 void        func_table_tail(uint32_t m68k_addr);
 
+/* JSR/BSR: push the return address on the 68K stack and call. The frame
+ * remembers it, so func_table_rts() can tell a normal return from code that
+ * returns somewhere it arranged itself (PEA + BRA, push + JMP). */
+bool        func_table_jsr(uint32_t m68k_addr, uint32_t ret);
+
+/* RTS: pop the return address; if it isn't the one this frame's JSR pushed,
+ * continue there (as a tail jump) instead of returning. Generated code:
+ * { func_table_rts(); return; } */
+void        func_table_rts(void);
+
+/* func_table_call with a known return address (used by func_table_jsr) */
+bool        func_table_call_expecting(uint32_t m68k_addr, uint32_t ret);
+
 /* Print the shadow call stack (outermost first). Called from a VBlank
  * callback it shows where the game's main thread is blocked. */
 #include <stdio.h>

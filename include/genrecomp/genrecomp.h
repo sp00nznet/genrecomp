@@ -70,6 +70,13 @@ void genrecomp_end_frame(void);
 void genrecomp_trigger_vblank(void);
 
 /*
+ * Raise the VBlank interrupt (level 6) if the VDP has it enabled: runs the
+ * game's level-6 handler with its context saved and restored, or holds it
+ * pending while SR masks it. Call from the bus VBlank callback.
+ */
+void genrecomp_vblank_irq(void);
+
+/*
  * Get a pointer to the rendered framebuffer (320x224 RGBX8888).
  * Valid after genrecomp_end_frame().
  */

@@ -411,6 +411,44 @@ static inline void m68k_update_nz32(uint32_t val) {
     } \
 } while(0)
 
+/* --- ABCD / SBCD / NBCD (packed BCD, byte only) ---
+ * Decimal add/subtract with extend: binary result, then decimal-adjust
+ * the low digit and the byte. X = C = decimal carry/borrow. Z is only
+ * cleared (a multi-byte BCD chain stays Z only if every byte was 0). N is
+ * undefined on the 68000; set from bit 7 like other byte ops. V likewise. */
+#define M68K_ABCD(dst, src) do { \
+    unsigned _s = (uint8_t)(src), _d = (uint8_t)(dst), _x = g_m68k.flag_X ? 1u : 0u; \
+    unsigned _r = _d + _s + _x; \
+    if (((_d & 0xF) + (_s & 0xF) + _x) > 9) _r += 6; \
+    bool _c = _r > 0x99; \
+    if (_c) _r += 0x60; \
+    g_m68k.flag_C = g_m68k.flag_X = _c; \
+    g_m68k.flag_V = false; \
+    g_m68k.flag_N = (_r & 0x80) != 0; \
+    if (_r & 0xFF) g_m68k.flag_Z = false; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_r); \
+} while(0)
+
+#define M68K_SBCD(dst, src) do { \
+    int _s = (uint8_t)(src), _d = (uint8_t)(dst), _x = g_m68k.flag_X ? 1 : 0; \
+    int _r = _d - _s - _x; \
+    bool _c = _r < 0; \
+    if (((_d & 0xF) - (_s & 0xF) - _x) < 0) _r -= 6; \
+    if (_c) _r -= 0x60; \
+    g_m68k.flag_C = g_m68k.flag_X = _c; \
+    g_m68k.flag_V = false; \
+    g_m68k.flag_N = (_r & 0x80) != 0; \
+    if (_r & 0xFF) g_m68k.flag_Z = false; \
+    (dst) = ((dst) & ~0xFFu) | (uint8_t)(_r); \
+} while(0)
+
+/* NBCD: 0 - dst - X, decimal */
+#define M68K_NBCD(dst) do { \
+    uint8_t _z = 0; \
+    M68K_SBCD(_z, (dst)); \
+    (dst) = ((dst) & ~0xFFu) | _z; \
+} while(0)
+
 /* ================================================================
  * Condition code macros (all 16 M68K conditions)
  * ================================================================ */
@@ -925,5 +963,14 @@ void recomp_m68k_reset(void);
 
 /* Handle exceptions (interrupts, traps, etc.) */
 void recomp_m68k_exception(uint8_t vector);
+
+/* Run an interrupt handler (e.g. the level-6 VBlank vector) from inside
+ * the main thread's execution, the way the hardware does: the interrupted
+ * code's entire context, SR and flags included, is restored afterwards.
+ * Call this from a VBlank callback rather than func_table_call. If SR
+ * masks the level it is held pending and taken by the bus clock once the
+ * mask drops. */
+void recomp_m68k_interrupt(uint8_t level);
+extern uint8_t g_m68k_irq_pending;
 
 #endif /* GENRECOMP_M68K_H */

@@ -164,6 +164,10 @@ endif()
 enable_testing()
 add_executable(genrecomp_test_runtime tests/test_runtime.c)
 target_link_libraries(genrecomp_test_runtime PRIVATE genrecomp)
+target_include_directories(genrecomp_test_runtime PRIVATE ${GPGX_DIR} ${GPGX_DIR}/m68k ${GPGX_DIR}/z80
+    ${GPGX_DIR}/sound ${GPGX_DIR}/cart_hw ${GPGX_DIR}/cart_hw/svp ${GPGX_DIR}/cd_hw
+    ${GPGX_DIR}/input_hw ${GPGX_DIR}/ntsc ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_definitions(genrecomp_test_runtime PRIVATE USE_32BPP_RENDERING LSB_FIRST HAVE_NO_SPRITE_LIMIT)
 add_test(NAME runtime COMMAND genrecomp_test_runtime)
 
 # --- Reference runner (GPGX interpreter, ground truth for diffing) ---

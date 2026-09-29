@@ -208,3 +208,9 @@ void genrecomp_shutdown(void) {
     s_initialized = false;
     printf("genrecomp: shutdown complete\n");
 }
+
+void genrecomp_vblank_irq(void) {
+    /* The VDP raises level 6 at VBlank only if register 1's IE0 is set */
+    if (reg[1] & 0x20)
+        recomp_m68k_interrupt(6);
+}
