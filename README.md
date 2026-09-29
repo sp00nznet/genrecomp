@@ -13,14 +13,16 @@ headless mode, and no game data or generated code in any repo.
 
 ## Status
 
-**Alpha, unversioned.** One title plays: Pigskin Footbrawl reaches a full
-one-player game. Audio is generated but not yet verified by ear, and there
-is no conformance harness yet (see [ROADMAP.md](ROADMAP.md)).
+**Alpha, unversioned.** Two titles play, both built by the shared
+recompiler in `tools/recompiler/`: Pigskin Footbrawl reaches full one-player
+matches, General Chaos reaches its battles. Audio is generated but not yet
+verified by ear, and there is no conformance harness yet (see
+[ROADMAP.md](ROADMAP.md)).
 
 | Title | Repo | State |
 |---|---|---|
-| Jerry Glanville's Pigskin Footbrawl | [sp00nznet/pigskin](https://github.com/sp00nznet/pigskin) (private) | In game: menus and full matches play |
-| General Chaos | [sp00nznet/genchaos](https://github.com/sp00nznet/genchaos) | Boots to its main loop; not yet on this runtime's fixes |
+| Jerry Glanville's Pigskin Footbrawl | [sp00nznet/pigskin](https://github.com/sp00nznet/pigskin) | In game: menus and full matches play |
+| General Chaos | [sp00nznet/genchaos](https://github.com/sp00nznet/genchaos) | In game: menus, squad selection, battles, battle report |
 
 ## Screenshots
 
@@ -30,7 +32,7 @@ Pigskin Footbrawl, recompiled, recorded headless with `--record`:
 
 ## Getting Started
 
-genrecomp is a library, so the first successful run is: it builds, the
+genrecomp is a library plus the recompiler that feeds it, so the first successful run is: it builds, the
 self-check passes, and the reference runner plays your ROM. You need your own
 Genesis ROM; none is provided or downloaded.
 
@@ -54,7 +56,7 @@ unattended).
 
 Prerequisites: Git, CMake 3.16+, Visual Studio 2022 with "Desktop development
 with C++" (or GCC/Clang on Linux), and SDL2 2.x (Windows: vcpkg; Linux:
-`libsdl2-dev`). `ffmpeg` on PATH is only needed for `--record`.
+`libsdl2-dev`). The recompiler needs Python 3.10+ with `capstone`. `ffmpeg` on PATH is only needed for `--record`.
 
 1. Get the source with its submodule:
    ```
@@ -95,8 +97,10 @@ Usual trip-ups:
 
 ## Usage
 
-A title links `genrecomp`, registers its generated functions, and hands
-control to them through `func_table_call`. Pigskin's
+A title keeps a small `recomp.json` (seeds and dispatch tables, no code),
+generates its C from the user's ROM with `tools/recompiler/generate.py`, links
+`genrecomp`, and hands control to the generated code through
+`func_table_call`, with `genrecomp_vblank_irq()` from its VBlank callback. Pigskin's
 [`src/main.c`](https://github.com/sp00nznet/pigskin) is the working example;
 [`examples/minimal`](examples/minimal/main.c) is the smallest skeleton.
 
@@ -120,6 +124,8 @@ with the same `--press` script, see where the pictures diverge, then diff
 - [docs/architecture.md](docs/architecture.md): the parts and the frame's data flow
 - [docs/recomp-runtime.md](docs/recomp-runtime.md): how recompiled code drives
   GPGX, and every timing trap found so far
+- [docs/recompiler.md](docs/recompiler.md): the recompiler, title configs, and
+  how to get a new title running
 - [docs/memory_map.md](docs/memory_map.md): the Genesis 68K address space
 
 ## Building from source

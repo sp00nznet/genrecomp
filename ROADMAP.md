@@ -10,10 +10,14 @@
   runners, compare RAM and VDP state at checkpoints, and report a pass/fail
   count in CI and in this README. The ROMs can't be redistributed, so it
   skips with a message when they are absent.
-- **One shared generator.** Pigskin (`tools/generate_recomp.py`) and General
-  Chaos (`tools/recompile.py`) each carry their own 68K-to-C generator. The
-  fixes in `docs/recomp-runtime.md` (fall-through regions, tail jumps,
-  computed calls) belong in one toolkit generator with per-title config.
+- **Fewer seeds.** General Chaos still needs ~15 hand-found entry points and one
+  declared dispatch table. Base-plus-offset tables (`lea base(pc); lea
+  table(pc); ...; adda; jsr (a0)`) could be recognised like compiled
+  switches are.
+- **Return points as entry points.** Task switchers return into another
+  task's saved PC mid-function; those RTSes fall back to a plain return
+  today. Making every call's return address an entry point would handle
+  them, at a large cost in code size.
 - **H-interrupts.** The clock doesn't raise level-4 interrupts, so raster
   splits (Pigskin's title screen) render wrong.
 

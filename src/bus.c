@@ -18,6 +18,8 @@
 #include "shared.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include "genrecomp/func_table.h"
 
 /* ================================================================
  * Cycle simulation for I/O-mapped hardware
@@ -147,6 +149,25 @@ static void bus_finish_dma(void) {
 }
 
 /* ================================================================
+ * Write watchpoint: GENRECOMP_WATCH=FFFEDE (hex, 24-bit) logs every write
+ * that touches that byte, with the shadow call stack. For "who overwrote
+ * this" questions, e.g. a return address found zeroed at RTS.
+ * ================================================================ */
+static void bus_watch(uint32_t addr, int size, uint32_t val) {
+    static int s_init;
+    static uint32_t s_watch;
+    if (!s_init) {
+        const char *w = getenv("GENRECOMP_WATCH");
+        s_watch = w ? (uint32_t)strtoul(w, NULL, 16) & 0xFFFFFF : 0xFFFFFFFF;
+        s_init = 1;
+    }
+    if (s_watch - addr < (uint32_t)size) {
+        fprintf(stderr, "watch: write%d $%06X = $%X, ", size * 8, addr, val);
+        func_table_dump_stack(stderr);
+    }
+}
+
+/* ================================================================
  * Flat 24-bit address space reads
  *
  * GenPlusGX's memory_map[256] divides the 24-bit space into 256
@@ -198,6 +219,7 @@ uint32_t bus_read32(uint32_t addr) {
 
 void bus_write8(uint32_t addr, uint8_t val) {
     addr &= 0xFFFFFF;
+    bus_watch(addr, 1, val);
     bus_tick_cycles();
     s_last_addr = addr;
     unsigned int region = (addr >> 16) & 0xFF;
@@ -215,6 +237,7 @@ void bus_write8(uint32_t addr, uint8_t val) {
 
 void bus_write16(uint32_t addr, uint16_t val) {
     addr &= 0xFFFFFF;
+    bus_watch(addr, 2, val);
     bus_tick_cycles();
     s_last_addr = addr;
     unsigned int region = (addr >> 16) & 0xFF;
